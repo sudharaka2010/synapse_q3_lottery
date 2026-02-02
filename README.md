@@ -7,7 +7,6 @@
 ![Database](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20MySQL-336791?style=for-the-badge&logo=postgresql)
 ![License](https://img.shields.io/badge/License-Educational-lightgrey?style=for-the-badge)
 
-> **Module / Assignment:** Synapse – Q3  
 > **Task:** Scrape latest lottery results and store them in a relational database using **Spring Boot + Hibernate/JPA**.
 
 ---
