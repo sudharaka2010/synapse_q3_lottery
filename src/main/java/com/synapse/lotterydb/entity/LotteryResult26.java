@@ -1,10 +1,17 @@
 package com.synapse.lotterydb.entity;
 
 import jakarta.persistence.*;
+import java.sql.Date;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "lottery_result26")
+@Table(
+        name = "lottery_result26",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_lottery_draw",
+                columnNames = {"lottery_name", "draw_no"}
+        )
+)
 public class LotteryResult26 {
 
     @Id
@@ -18,7 +25,7 @@ public class LotteryResult26 {
     private Integer drawNo;
 
     @Column(name = "draw_date", nullable = false)
-    private java.sql.Date drawDate;
+    private Date drawDate;
 
     @Column(name = "result_numbers", nullable = false, length = 50)
     private String resultNumbers;
@@ -26,10 +33,14 @@ public class LotteryResult26 {
     @Column(name = "source_url", length = 255)
     private String sourceUrl;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // Getters/Setters
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public Integer getId() { return id; }
 
     public String getLotteryName() { return lotteryName; }
@@ -38,8 +49,8 @@ public class LotteryResult26 {
     public Integer getDrawNo() { return drawNo; }
     public void setDrawNo(Integer drawNo) { this.drawNo = drawNo; }
 
-    public java.sql.Date getDrawDate() { return drawDate; }
-    public void setDrawDate(java.sql.Date drawDate) { this.drawDate = drawDate; }
+    public Date getDrawDate() { return drawDate; }
+    public void setDrawDate(Date drawDate) { this.drawDate = drawDate; }
 
     public String getResultNumbers() { return resultNumbers; }
     public void setResultNumbers(String resultNumbers) { this.resultNumbers = resultNumbers; }

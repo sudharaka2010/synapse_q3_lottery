@@ -23,60 +23,91 @@ public class SynapseQ3LotteryApplication implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
 
-        System.out.println("=== Q3: Scrape + Save Lottery Results to MySQL (Hibernate/JPA) ===");
-        System.out.println("1. Ada Kotipathi");
-        System.out.println("2. Lagna Wasana");
-        System.out.println("3. Super Ball");
-        System.out.println("4. Govi Setha");
-        System.out.println("5. Dhana Nidhanaya");
-        System.out.println("6. Mahajana Sampatha");
-        System.out.println("7. Jaya Sampatha");
+        System.out.println("=== Q3: Scrape + Save Lottery Results (DLB) (Hibernate/JPA) ===");
+        LotteryResultsScraper.printMenu();
 
         try (Scanner sc = new Scanner(System.in)) {
 
             System.out.print("\nSelect lottery (1-7): ");
-            int choice = Integer.parseInt(sc.nextLine().trim());
+            String input = sc.nextLine().trim();
+
+            int choice;
+            try {
+                choice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number 1-7.");
+                return;
+            }
 
             // 1) scrape
-            LotteryResultsScraper.ScrapedResult r = LotteryResultsScraper.fetchByChoice(choice);
+            LotteryResultsScraper.ScrapedResult r;
+            try {
+                r = LotteryResultsScraper.fetchByChoice(choice);
+            } catch (java.io.IOException e) {
+                System.out.println("Failed to load results from DLB site.");
+                System.out.println("Reason: " + e.getMessage());
+                return;
+            }
 
             if (r == null) {
                 System.out.println("Invalid selection. Exiting.");
                 return;
             }
 
-            // 2) validate date (avoid crash)
+            // 2) validate fields
+            if (r.lotteryName == null || r.lotteryName.isBlank()) {
+                System.out.println("Lottery name not found. Not saving to DB.");
+                return;
+            }
+            if (r.drawNo == null || r.drawNo.isBlank()) {
+                System.out.println("Draw number not found. Not saving to DB.");
+                return;
+            }
             if (r.date == null || r.date.isBlank()) {
-                System.out.println("Date not found from website. Not saving to DB.");
+                System.out.println("Draw date not found. Not saving to DB.");
                 return;
             }
 
-            int drawNoInt = Integer.parseInt(r.drawNo);
+            int drawNoInt;
+            try {
+                drawNoInt = Integer.parseInt(r.drawNo.trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid draw number from website. Not saving to DB.");
+                return;
+            }
 
-            // 3) prevent duplicates
+            // ✅ Your requested logic:
+            // If same lottery + same draw_no already exists -> "Today have not draw this lottery" (do not save)
             if (repo.findByLotteryNameAndDrawNo(r.lotteryName, drawNoInt).isPresent()) {
-                System.out.println("Already saved in DB (same lottery + draw).");
+                System.out.println("\nToday have not draw this lottery.");
+                System.out.println("Latest draw is already stored in DB.");
+                System.out.println("Lottery : " + r.lotteryName);
+                System.out.println("Draw No : " + r.drawNo);
+                System.out.println("Date    : " + r.date);
+                System.out.println("Numbers : " + r.numbers);
                 return;
             }
 
-            // 4) map to entity
+            // ✅ New draw -> insert new row (keep old history)
             LotteryResult26 row = new LotteryResult26();
             row.setLotteryName(r.lotteryName);
             row.setDrawNo(drawNoInt);
-            row.setDrawDate(Date.valueOf(r.date));       // yyyy-MM-dd
-            row.setResultNumbers(r.numbers);
+            row.setDrawDate(Date.valueOf(r.date)); // yyyy-MM-dd
+            row.setResultNumbers((r.numbers == null ? "" : r.numbers));
             row.setSourceUrl(r.url);
 
-            // 5) save
             repo.save(row);
 
-            System.out.println("\n Saved to DB table: lottery_result26");
+            System.out.println("\n✅ New draw saved to DB table: lottery_result26");
             System.out.println("Lottery : " + r.lotteryName);
             System.out.println("Draw No : " + r.drawNo);
             System.out.println("Date    : " + r.date);
             System.out.println("Numbers : " + r.numbers);
+
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
         }
     }
 }
