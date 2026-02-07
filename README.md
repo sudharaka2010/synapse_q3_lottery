@@ -1,4 +1,4 @@
-# 🎟️ Synapse Q3 – Lottery Results Scraper + Database Save (Spring Boot + JPA)
+# 🎟️ Lottery Results Scraper + Database Save (Spring Boot + JPA)
 
 ![Java](https://img.shields.io/badge/Java-17-red?style=for-the-badge&logo=java)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?style=for-the-badge&logo=springboot)
